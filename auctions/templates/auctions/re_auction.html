@@ -1,0 +1,27 @@
+{% extends "auctions/layout.html" %}
+
+
+{% block title %} New Product {% endblock title %}
+
+
+{% block body %}
+
+    <h2>Make an Auction:</h2>
+    <form action="{% url 'new_product' %}" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{form.as_p}}
+            <button type="submit">Submit</button>
+    </form>
+
+    {% if form.errors %}
+    <h3>Error(s) in the form:</h3>
+    <ul>
+        {% for field in form %}
+            {% for error in field.errors %}
+                <li>{{ field.label }}: {{ error }}</li>
+            {% endfor %}
+        {% endfor %}
+    </ul>
+{% endif %}
+
+{% endblock body %}

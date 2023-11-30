@@ -1,0 +1,144 @@
+{% extends 'auctions/layout.html' %}
+
+{% block title %}{{ product.title }}{% endblock title %}
+
+{% block body %}
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-6">
+                <img src="{{ product.picture.url }}" alt="{{ product.title }}" class="img-fluid rounded mb-3">
+                <h2>{{ product.title }}</h2>
+                {% if product.highest_bid %}
+                    <p><strong>Highest Bid:</strong> ${{ product.highest_bid.bid_amount }} by {{ product.highest_bid.bidder.username }} at {{ product.highest_bid.bidding_time }}</p>
+                {% else %}
+                    <p><strong>Starting Bid:</strong> ${{ product.starting_bid }}</p>
+                {% endif %}
+                <form action="{% url 'product' product.id %}" method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <input type="hidden" name="form_type" value="bid">
+                        <label for="bid_amount">Your Bid:</label>
+                        <input type="number" name="bid_amount" id="bid_amount" min="{{ product.highest_bid }}" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Place a bid</button>
+                </form>
+            </div>
+            <div class="col-md-6">
+                <h3>Details:</h3>
+                <ul>
+                    <li>Listed by: {{ product.owner.username }}</li>
+                    {% if product.category %}
+                        <li>Category: {{ product.get_category_display }}</li>
+                    {% else %}
+                        <li>No category listed</li>
+                    {% endif %}
+                    <!-- Add more details as needed -->
+                </ul>
+                
+                <!-- New form for comments -->
+                <form action="{% url 'product' product.id %}" method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <input type="hidden" name="form_type" value="comment">
+                        <label for="comment_text">Add Comment:</label>
+                        <input type="text" name="comment_text" id="comment_text" class="form-control">
+                    </div>
+                    <div class="text-right">
+                        <button type="submit" class="btn btn-warning">Post Comment</button>
+                    </div>
+                </form>
+                
+                <!-- Display comments -->
+                <div class="mt-4">
+                    <h4>Comments:</h4>
+                    <div id="comment-section">
+                        {% for comment in comments %}
+                            <!-- Display first 2 comments -->
+                            <div class="{% if comment.commenter == product.owner %}owner-comment{% else %}other-comment{% endif %}">
+                                <p>
+                                    <strong>{{ comment.commenter.username }}{% if comment.commenter == product.owner %} (Owner){% endif %}:</strong><br>
+                                    <div class="comment-text">
+                                        {{ comment.comment_text }}
+                                        <span class="comment-date" style="float: right;">
+                                            {{ comment.created_at|timesince }} ago.
+                                        </span>
+                                    </div>
+                                </p>
+                            </div>
+                        {% empty %}
+                            <p>No comments yet. </p>
+                        {% endfor %}
+
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .img-fluid {
+            max-width: 100%;
+            height: auto;
+        }
+        /* Add more custom styling as needed */
+        .owner-comment {
+            /* Additional styling for owner's comments */
+            background-color: #ffeeba;
+            margin-bottom: 10px;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .comment-username {
+            /* Styling for comment usernames */
+            font-weight: bold;
+            color: #333; /* Change the color as needed */
+        }
+        .owner-username {
+            /* Styling for owner's usernames */
+            color: #ff5733; /* Change the color as needed */
+        }
+        .comment-text {
+            /* Styling for comment text */
+            color: #666; /* Change the color as needed */
+            margin-bottom: 5px;
+        }
+        .comment-date {
+            /* Styling for comment date */
+            color: #888; /* Change the color as needed */
+            font-size: 0.8em;
+        }
+        .other-comment {
+            background-color: #ffffcc; /* Yellowish block for non-owner comments */
+            margin-bottom: 10px;
+            padding: 5px;
+            border-radius: 5px;
+        }
+    
+        .comment-text {
+            max-width: 100%;
+            word-wrap: break-word;
+        }
+    </style>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        let showMoreComments = document.getElementById('show-more-comments');
+        if (showMoreComments) {
+            showMoreComments.addEventListener('click', function (event) {
+                event.preventDefault();
+                let hiddenComments = document.querySelectorAll('.other-comment[style*="display: none"]');
+                let count = 0;
+                for (let i = 0; i < hiddenComments.length; i++) {
+                    if (count < 3) {
+                        hiddenComments[i].style.display = 'block';
+                        count++;
+                    } else {
+                        break;
+                    }
+                }
+                if (hiddenComments.length <= 3) {
+                    showMoreComments.style.display = 'none';
+                }
+            });
+        }
+    });
+</script>
+{% endblock body %}
